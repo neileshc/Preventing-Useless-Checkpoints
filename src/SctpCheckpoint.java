@@ -2,10 +2,11 @@
 public class SctpCheckpoint implements Runnable {
 
 	SctpMessage newmsg=new SctpMessage(SctpServer.mynodeno);
+	int count=0;
 	
 	long find_ICT()
 	{
-		return 10000;
+		return 2000;
 	}
 	
 	
@@ -26,7 +27,7 @@ public class SctpCheckpoint implements Runnable {
 		
 				
 		System.out.println("\n checkpoint taken");
-		System.out.println("CKPT before CP :"+SctpZDStruct.CKPT[SctpServer.mynodeno-1]);
+		System.out.println("CKPT after CP :"+SctpZDStruct.CKPT[SctpServer.mynodeno-1]);
 		
 	}
 	
@@ -45,6 +46,8 @@ public class SctpCheckpoint implements Runnable {
 			newmsg.msgtype="CheckPoint";
 			SctpQueueProc.addQ(newmsg);
 			
+		
+			count++;
 			
 			} 
 			
@@ -57,8 +60,10 @@ public class SctpCheckpoint implements Runnable {
 			}
 					
 			
-		}while(true); // change this to handle termination
+		}while(count<Configfilereader.numberofcheckpoints); // change this to handle termination
 		
+		
+		//System.out.println("checkpoint thread exiting");
 		
 	}
 

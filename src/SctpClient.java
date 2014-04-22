@@ -78,7 +78,7 @@ public class SctpClient extends Thread {
 						
 //------------------------------------------------------------------------------------------------------			
 					
-			
+			int count =0;
 			
 						
 						do{	
@@ -114,9 +114,10 @@ public class SctpClient extends Thread {
 								//SendMsg(sc.get(temp));
 								if(sc[temp]!=null)
 								SendMsg(sc[temp]);
+								count++;
 								
 								System.out.println("\n Clock value after send :\t"+SctpVectorClock.log_clk);
-								System.out.println("\n Message sent");
+								System.out.println("\n Message sent :"+ count);
 								SctpVectorClock.send_msg_flag=false;
 								
 								}

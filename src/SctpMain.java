@@ -50,6 +50,8 @@ public class SctpMain {
 				if((newmsg.getCKPT_index(nodeno)==SctpZDStruct.getCKPT_index(nodeno)) && (newmsg.getTaken_index(nodeno)) )
 				{
 					// Take forced check point
+					SctpCheckpoint.take_Checkpoint();
+					System.out.println("Forced Checkpoint taken :Type 1*************************************");
 					
 				}
 				else 
@@ -66,8 +68,8 @@ public class SctpMain {
 								
 								if(newmsg.getClock()>Math.max(SctpZDStruct.ClockArr[i],newmsg.getClockArr_index(i)))
 								{
-									
-									// take forced checkpoint
+									SctpCheckpoint.take_Checkpoint();
+									System.out.println("Forced Checkpoint taken :Type 2***************************");
 								}
 								
 								}

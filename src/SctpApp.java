@@ -44,17 +44,17 @@ public class SctpApp implements Runnable {
 				try {
 					
 					// Inducing random sleep so get random requests for critical section
-					Random r = new Random();
-					Thread.sleep(r.nextInt(5000));
-
+					//Random r = new Random();
+					//Thread.sleep(r.nextInt(10));
+					Thread.sleep(100);
 					
 					SctpQueueProc.addQ(newmsg);
 					
-				//	System.out.println("\nAPP: message added to queue");
+				
 						count++;
 
-			
-					Thread.sleep(3000);
+						System.out.println("Msg added to queue"+ count);
+					
 
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -65,16 +65,18 @@ public class SctpApp implements Runnable {
 			} while (count < Configfilereader.numberofmessages);
 
 		
+			System.out.println("Send mesg thread exiting " + count);
+			
 
-		try {
-			// if i am not requestor node and i have token then i terminnate
-			// immidiately before receiving request from
-			// other nodes, sleep helps avoid that
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			// if i am not requestor node and i have token then i terminnate
+//			// immidiately before receiving request from
+//			// other nodes, sleep helps avoid that
+//			Thread.sleep(5000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 
 		
 		

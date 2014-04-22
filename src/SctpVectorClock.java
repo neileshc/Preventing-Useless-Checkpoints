@@ -11,12 +11,6 @@ static int mynodeno=0;
 
 public SctpVectorClock(int x)
 {
-//	System.out.println("VectorClock : Initializing Vector clock content to 0");
-//	for(int i=0;i<Configfilereader.totalnodes;i++)
-//	{
-//				vector_clk[i]=0;
-//				
-//	}
 	log_clk=0;
 	mynodeno=x;
 	send_msg_flag=false;

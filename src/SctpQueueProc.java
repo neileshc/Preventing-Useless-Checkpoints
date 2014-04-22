@@ -13,7 +13,7 @@ public class SctpQueueProc implements Runnable {
 		queueproc.add(msg);
 		//System.out.println("\nQUEUE: message added to queue");
 	}
-	
+	int count=0;
 		
 	@Override
 	public void run() {
@@ -32,11 +32,26 @@ public class SctpQueueProc implements Runnable {
 				}
 				else if(queueproc.peek().msgtype.equals("SENDING"))
 				{
+//					do{
+//						
+//						System.out.print("");
+//						
+//					}while(SctpVectorClock.send_msg_flag=true);
+					
+					
 					queueproc.poll();
 					SctpMain.sm.msgtype="SENDING";
-					SctpVectorClock.send_msg_flag=true;					
+					SctpVectorClock.send_msg_flag=true;		
+					count++;
+					System.out.println("message ready for sending " +count );
 					
-										
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+							
 					
 				}
 				else if(queueproc.peek().msgtype.equals("CheckPoint"))
