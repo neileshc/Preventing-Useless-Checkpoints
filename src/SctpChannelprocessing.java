@@ -41,7 +41,11 @@ public SctpChannelprocessing(SctpChannel sc) {
 							
 				// after receiving message send it over to main for sync purpose
 				//dont do processing except reading in the thread level.
-				SctpMain.Processdata(newmsg);
+				//SctpMain.Processdata(newmsg);
+				
+				newmsg.msgtype="RECEIVED";
+				SctpQueueProc.queueproc.add(newmsg);
+				//System.out.println("\nchannel processing: new message received and added to queue");
 			}
 			
 		}

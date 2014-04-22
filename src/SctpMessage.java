@@ -11,25 +11,29 @@ public class SctpMessage implements Serializable {
 	
 	//Declare all the content and add it to appropriate functions here that you want to be a part of message
 	private String content;
-	//private int[] Vector = new int[Configfilereader.totalnodes];
 	private int clock;
+	public String msgtype;
+	private int [] ClockArr = new int[Configfilereader.totalnodes];
+	private int [] CKPT = new int[Configfilereader.totalnodes];
+	private boolean [] Taken= new boolean[Configfilereader.totalnodes];
 
 	
-
 	private int node_no;
 	public boolean isterminationmsg;
 	
 	public SctpMessage(int nodeno) {
-		
-		// Initialize Vector clock to 0
-//		for (int i = 0; i < Configfilereader.totalnodes; i++) {
-//			Vector[i] = 0;
-//
-//		}
 		clock=0;
 		content = "Initialized message";
 		node_no=nodeno;
 		isterminationmsg=false;
+		
+		for(int i=0;i<Configfilereader.totalnodes;i++)
+		{
+			Taken[i]=true;
+		}
+		
+		Taken[nodeno-1]=false;
+		
 	}
 
 	public int getClock() {
@@ -54,16 +58,55 @@ public class SctpMessage implements Serializable {
 		this.content = content;
 	}
 
+		
+			
 	
-//	public int[] getVector() {
-//		return Vector;
-//	}
-//
-//	public void setVector(int[] Vector) {
-//		this.Vector = Vector;
-//	}
-		
-		
+	
+	
+	public int[] getClockArr() {
+		return ClockArr;
+	}
+
+	public void setClockArr(int[] clockArr) {
+		ClockArr = clockArr;
+	}
+	
+	public int getClockArr_index(int nodeno)
+	{
+		return ClockArr[nodeno];
+	}
+	
+	
+
+	public int[] getCKPT() {
+		return CKPT;
+	}
+
+	public void setCKPT(int[] cKPT) {
+		CKPT = cKPT;
+	}
+
+	
+	public int getCKPT_index(int nodeno)
+	{
+		return CKPT[nodeno-1];
+	}
+	
+	
+	public boolean[] getTaken() {
+		return Taken;
+	}
+
+	public void setTaken(boolean[] taken) {
+		Taken = taken;
+	}
+	public boolean getTaken_index(int nodeno)
+	{
+		return Taken[nodeno-1];
+	}
+	
+	
+	
 	
 	
 	public static byte[] serialize(Object obj) throws IOException {

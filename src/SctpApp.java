@@ -4,13 +4,15 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import sun.rmi.runtime.Log;
 
 public class SctpApp implements Runnable {
 
 	// no of app execution per node
 	int count;
-
+	SctpMessage newmsg=new SctpMessage(SctpServer.mynodeno);
+	
 	BufferedWriter bufferedWriter;
 	FileWriter fileWriter;
 	String fileName = "/home/004/n/nx/nxc121930/AOS/Project2/"+SctpServer.mynodeno+".log";
@@ -19,7 +21,7 @@ public class SctpApp implements Runnable {
 	public SctpApp() {
 		System.out.println("Application : Application is initiated");
 		SctpMain.LOG.logger.info("\tApplication : Application is initiated");
-
+		newmsg.msgtype="SENDING";
 		count = 0;
 
 		try {
@@ -45,9 +47,10 @@ public class SctpApp implements Runnable {
 					Random r = new Random();
 					Thread.sleep(r.nextInt(5000));
 
-
-					SctpVectorClock.send_msg_flag=true;
 					
+					SctpQueueProc.addQ(newmsg);
+					
+				//	System.out.println("\nAPP: message added to queue");
 						count++;
 
 			

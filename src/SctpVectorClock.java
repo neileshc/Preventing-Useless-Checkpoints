@@ -46,6 +46,9 @@ increment_Log_clk();
 public static void increment_Log_clk()
 {
 log_clk++;
+
+// keeping the zdata struct upto date with own clock
+SctpZDStruct.ClockArr[mynodeno-1]=log_clk;
 }
 
 
