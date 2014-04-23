@@ -6,7 +6,14 @@ public class SctpCheckpoint implements Runnable {
 	
 	long find_ICT()
 	{
-		return 2000;
+		if(SctpServer.mynodeno==1)
+			return 15000;
+			else
+				return 3000;
+			
+			
+			
+		
 	}
 	
 	
@@ -40,7 +47,8 @@ public class SctpCheckpoint implements Runnable {
 			try {
 				
 			// get the ICT time and sleep for that much time	
-			Thread.sleep(find_ICT());
+			if(count>0)
+				Thread.sleep(find_ICT());
 			
 			// take independant chackpoint here
 			newmsg.msgtype="CheckPoint";

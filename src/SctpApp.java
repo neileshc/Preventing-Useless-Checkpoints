@@ -46,14 +46,19 @@ public class SctpApp implements Runnable {
 					// Inducing random sleep so get random requests for critical section
 					//Random r = new Random();
 					//Thread.sleep(r.nextInt(10));
+					
+					if(SctpServer.mynodeno==1)
 					Thread.sleep(100);
+					else
+						Thread.sleep(5000);
+					
 					
 					SctpQueueProc.addQ(newmsg);
 					
 				
 						count++;
 
-						System.out.println("Msg added to queue"+ count);
+					//	System.out.println("Msg added to queue"+ count);
 					
 
 				} catch (InterruptedException e) {

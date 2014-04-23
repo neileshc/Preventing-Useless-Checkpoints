@@ -119,7 +119,7 @@ public class SctpClient extends Thread {
 								System.out.println("\n Clock value after send :\t"+SctpVectorClock.log_clk);
 								System.out.println("\n Message sent :"+ count);
 								SctpVectorClock.send_msg_flag=false;
-								
+								SctpQueueProc.readytoprocess=true;
 								}
 							}	
 							

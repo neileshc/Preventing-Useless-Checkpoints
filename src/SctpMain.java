@@ -35,7 +35,7 @@ public class SctpMain {
 				
 			if(newmsg.isterminationmsg)
 			{
-				System.out.println("Process Data : Termination Received ");
+				System.out.println("Process Data : Termination Request Received ");
 				terminationreceived=true;
 				Oktoterminate=true;
 			}
