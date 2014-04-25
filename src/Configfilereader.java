@@ -4,55 +4,59 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+
 public class Configfilereader {
+	
 	public static Integer totalnodes;
-	public static int numberofmessages = 0;
-	public static int numberofcheckpoints = 0;
-	public static int MTT = 0;
-	public static int[] Machineno = new int[100];
-	public static String[] Machinename = new String[100];
-	public static int[] Machineport = new int[100];
-	int i = -1;
-	public static boolean isbug = false;
-	public static int ICT = 0;
-
-	public void readfile() throws IOException {
+	public static String[] Machineno = new String[100];
+	static String[] Machinename = new String[100];
+	static String[] Machineport = new String[100];
+	
+	int i =-1;
+	public void readfile() throws IOException
+	{
 		File file = new File("Config.txt");
-		BufferedReader fr = new BufferedReader(new InputStreamReader(
-				new FileInputStream(file), "ASCII"));
-		String line = fr.readLine();
-		// do nothing its para name line
 		
-		line = fr.readLine();
-		String[] tokens = line.split(" ");
+		    BufferedReader fr = new BufferedReader(new InputStreamReader(new FileInputStream(file), "ASCII"));
+		    String line = fr.readLine();
+           
+            String[] tokens = line.split(" ");
+            totalnodes= Integer.parseInt(tokens[0]);
+		    
+		    while(true)
+	        {
+	            line = fr.readLine();
+	            if(line==null)
+	                break;
+	            i++;
+	            tokens = line.split(" ");//those are your words
+	           
+			    Machineno[i] = tokens[0];
+			    Machinename[i] = tokens[1];
+			    Machineport[i]= tokens[2];
+	            	            
+	            System.out.println(Machineno[i]);
+			    System.out.println(Machinename[i]);
+			    System.out.println(Machineport[i]);
+			    
+	            
+	        }
+	  
+
 		
-		// Fetching the first line of config file
-		totalnodes = Integer.parseInt(tokens[0]);
-		numberofmessages = Integer.parseInt(tokens[1]);
-		numberofcheckpoints = Integer.parseInt(tokens[2]);
-		MTT = Integer.parseInt(tokens[3]);
-		ICT = Integer.parseInt(tokens[4]);
-
-		// Fetch rest of the details from config file
-		if (tokens[4].equals("bugit")) {
-			isbug = true;
-			System.out.println("ConfigfileReader : Bug introduced in the code");
-			SctpMain.LOG.logger.info("\tConfigfileReader : Bug introduced in the code");
-		}
-
-		while (true) {
-			line = fr.readLine();
-			if (line == null)
-				break;
-			i++;
-			tokens = line.split(" ");// those are your words
-
-			Machineno[i] = Integer.parseInt(tokens[0]);
-			Machinename[i] = tokens[1];
-			Machineport[i] = Integer.parseInt(tokens[2]);
-		}
-
 	}
+	
+	public void findmyserversocketport(Integer node)
+	{
+		
+	
+	}
+	
+	public void findmyclientsocketports(Integer node)
+	{
+	
+	}
+	
 
-
+	
 }
