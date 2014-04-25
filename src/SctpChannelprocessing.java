@@ -18,12 +18,7 @@ public SctpChannelprocessing(SctpChannel sc) {
 		
 		while(true)
 		{
-			if(SctpMain.Oktoterminate)  
-			{
-				break;
-				
-			}
-					
+								
 			// its blocking call
 			// you need to continously keep checking for con
 			SctpMessage newmsg = null;
@@ -31,26 +26,22 @@ public SctpChannelprocessing(SctpChannel sc) {
 			
 			if(newmsg!=null)
 			{
-
+						
+				newmsg.msgtype="RECEIVED";
+				SctpQueueProc.queueproc.add(newmsg);
+				
+				
 				if(newmsg.isterminationmsg==true)
 				{
-					SctpMain.Processdata(newmsg);
 					break;
 				}
 				
-							
-				// after receiving message send it over to main for sync purpose
-				//dont do processing except reading in the thread level.
-				//SctpMain.Processdata(newmsg);
-				
-				newmsg.msgtype="RECEIVED";
-				SctpQueueProc.queueproc.add(newmsg);
-				//System.out.println("\nchannel processing: new message received and added to queue");
 			}
 			
 		}
 		
-		System.out.println("Channel Processing : Exiting ");
+	//	System.out.println("Channel Processing : Exiting ");
+		SctpMain.LOG.logger.info("\tChannel Processing : Exiting ");
 	}
 
 	SctpMessage receiveMsg(SctpChannel sc) {

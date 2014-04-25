@@ -5,6 +5,9 @@ import java.util.Random;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.uncommons.maths.random.ExponentialGenerator;
+import org.uncommons.maths.random.MersenneTwisterRNG;
+
 import sun.rmi.runtime.Log;
 
 public class SctpApp implements Runnable {
@@ -12,17 +15,29 @@ public class SctpApp implements Runnable {
 	// no of app execution per node
 	int count;
 	SctpMessage newmsg=new SctpMessage(SctpServer.mynodeno);
-	
+	SctpMessage termmsg=new SctpMessage(SctpServer.mynodeno);
+	long mtt=0;
 	BufferedWriter bufferedWriter;
 	FileWriter fileWriter;
 	String fileName = "/home/004/n/nx/nxc121930/AOS/Project2/"+SctpServer.mynodeno+".log";
+	Random rng;
+	ExponentialGenerator gen;
+	final long oneMinute;
 	
-
+	
 	public SctpApp() {
 		System.out.println("Application : Application is initiated");
 		SctpMain.LOG.logger.info("\tApplication : Application is initiated");
 		newmsg.msgtype="SENDING";
 		count = 0;
+		
+		oneMinute = Configfilereader.MTT;
+		rng = new MersenneTwisterRNG();
+		 
+		// Generate events at an average rate of 10 per minute.
+		 gen= new ExponentialGenerator(Configfilereader.numberofmessages, rng);
+		 boolean running = true;
+		
 
 		try {
 			// clear the content
@@ -35,6 +50,17 @@ public class SctpApp implements Runnable {
 
 	}
 
+	
+	long findMTT()
+	{
+	
+		 mtt = Math.round(gen.nextValue() * oneMinute);
+			
+		 System.out.println("MTT : "+mtt);
+		return mtt;
+	}
+	
+	
 	@Override
 	public void run() {
 
@@ -42,23 +68,21 @@ public class SctpApp implements Runnable {
 
 			do {
 				try {
+	
 					
-					// Inducing random sleep so get random requests for critical section
-					//Random r = new Random();
-					//Thread.sleep(r.nextInt(10));
+//					if(SctpServer.mynodeno==1)
+//					Thread.sleep(100);
+//					else
+//						Thread.sleep(5000);
 					
-					if(SctpServer.mynodeno==1)
-					Thread.sleep(100);
-					else
-						Thread.sleep(5000);
+					Thread.sleep(findMTT());
 					
-					
+					newmsg.msgtype="SENDING";
 					SctpQueueProc.addQ(newmsg);
-					
+					SctpMain.LOG.logger.info("\tApplication : new msg added to Queue");
 				
 						count++;
 
-					//	System.out.println("Msg added to queue"+ count);
 					
 
 				} catch (InterruptedException e) {
@@ -70,39 +94,13 @@ public class SctpApp implements Runnable {
 			} while (count < Configfilereader.numberofmessages);
 
 		
-			System.out.println("Send mesg thread exiting " + count);
+						
 			
+			termmsg.msgtype="SENDING_TERMINATION";
+			SctpQueueProc.addQ(termmsg);
 
-//		try {
-//			// if i am not requestor node and i have token then i terminnate
-//			// immidiately before receiving request from
-//			// other nodes, sleep helps avoid that
-//			Thread.sleep(5000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-
-		
-		
-		
-//		// Termination Initiation
-//		int i = 0;
-//		if (SctpToken.doihavetoken == true) {
-//			for (i = 0; i < Configfilereader.totalnodes; i++) {
-//				if (SctpVectorClock.Request_Node[i] == SctpToken.tokenVector[i]) {
-//					continue;
-//				} else
-//					break;
-//			}
-//
-//			if (i == Configfilereader.totalnodes) {
-//				System.out
-//						.println("Initiating termination as all of the requests are satisfied");
-//				SctpMain.Oktoterminate = true;
-//
-//			}
-//		}
+			//System.out.println("Send mesg thread exiting " + count);
+			SctpMain.LOG.logger.info("\tApplication :Send mesg thread exiting ");
 		
 	}
 }

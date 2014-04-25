@@ -21,6 +21,9 @@ public class Configfilereader {
 		BufferedReader fr = new BufferedReader(new InputStreamReader(
 				new FileInputStream(file), "ASCII"));
 		String line = fr.readLine();
+		// do nothing its para name line
+		
+		line = fr.readLine();
 		String[] tokens = line.split(" ");
 		
 		// Fetching the first line of config file

@@ -7,7 +7,7 @@ import com.sun.corba.se.impl.orbutil.concurrent.SyncUtil;
 import com.sun.nio.sctp.MessageInfo;
 
 public class SctpMain {
-	public static int msgexch = 0;
+	public static int terminationsignal= 0;
 	public static SctpVectorClock sv;
 	public static SctpMessage sm;
 	public static SctpServer s1;
@@ -35,15 +35,14 @@ public class SctpMain {
 				
 			if(newmsg.isterminationmsg)
 			{
-				System.out.println("Process Data : Termination Request Received ");
-				terminationreceived=true;
-				Oktoterminate=true;
+				LOG.logger.info("\tProcess Data : Termination Request Received ");
+				terminate();
 			}
 			
 			else
 			{
-				System.out.println("\n Message received");
-			
+				System.out.println("Message received");
+				LOG.logger.info("\tProcess Data : Message received");
 				// evaluate if need forced checkpoint
 				
 				// verify Z cycle path
@@ -52,7 +51,7 @@ public class SctpMain {
 					// Take forced check point
 					SctpCheckpoint.take_Checkpoint();
 					System.out.println("Forced Checkpoint taken :Type 1*************************************");
-					
+					LOG.logger.info("\tProcess Data : Forced Checkpoint taken :Type 1******************");
 				}
 				else 
 				{
@@ -70,6 +69,7 @@ public class SctpMain {
 								{
 									SctpCheckpoint.take_Checkpoint();
 									System.out.println("Forced Checkpoint taken :Type 2***************************");
+									LOG.logger.info("\tProcess Data : Forced Checkpoint taken :Type 2******************");
 								}
 								
 								}
@@ -94,7 +94,8 @@ public class SctpMain {
 				
 				
 				//System.out.println("\n Clock received value :\t"+newmsg.getClock());
-				System.out.println("\n Clock updated value :\t"+SctpVectorClock.log_clk);
+				System.out.println("Clock updated value :\t"+SctpVectorClock.log_clk);
+				LOG.logger.info("\tProcess Data :Clock updated value :\t"+SctpVectorClock.log_clk);
 			}
 			
 						
@@ -102,6 +103,20 @@ public class SctpMain {
 	
 	
 	}
+	
+	
+	public static synchronized void terminate()
+	{
+		terminationsignal++;
+		
+		if(terminationsignal>=Configfilereader.totalnodes)
+		{
+			Oktoterminate=true;
+			System.out.println("Terminating.....");
+			LOG.logger.info("\tProcess Data :Terminating.....");
+		}
+	}
+	
 	
 	public static void main(String args[]) throws InterruptedException,
 			IOException {
@@ -144,42 +159,40 @@ public class SctpMain {
 		t6.start();
 
 		
-		while(Oktoterminate==false)
+		while(true)
 		{
+			
 			// do nothing
 			if(Oktoterminate==true)
+			{
+				System.out.println("Oktoterminate" +Oktoterminate);
+				while(!SctpQueueProc.queueproc.isEmpty())
+				{
+				// wait here
+				
+				}
+				
+				System.out.println("Breaking while");
 				break;
+			}
 			
 			System.out.print("");
 			
 		}
 		
 		System.out.println("Closing the connections");
+		LOG.logger.info("\tProcess Data :Closing the connections");
 		
-	//	Thread.sleep(5000);
+		Thread.sleep(2000);
 			
-		if(terminationreceived==true)
-		{
-			if(c1.send_terminatation())
-			{
+	
 			t2.interrupt();
 			t1.interrupt();
-			}
-		}
-		else if(c1.send_terminatation())
-		{
+			t5.interrupt();
+					
 		
-			t2.interrupt();
-			t1.interrupt();
-		}
 			
 		
-		Thread.sleep(5000);
-		
-//		for (int i = 0; i < Configfilereader.totalnodes; i++) {
-//			System.out.print(SctpVectorClock.Request_Node[i] + "\t");
-//			
-//		}
 		
 	}
 	

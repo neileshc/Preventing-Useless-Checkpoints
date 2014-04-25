@@ -8,18 +8,19 @@ public class SctpQueueProc implements Runnable {
 	public static Queue<SctpMessage> queueproc=new LinkedList<>();
 	public static boolean readytoprocess=true;	
 	
-	public static void addQ(SctpMessage msg) {
+	public static synchronized void addQ(SctpMessage msg) {
 		
 		queueproc.add(msg);
 		//readytoprocess=true;
-		//System.out.println("\nQUEUE: message added to queue");
+		SctpMain.LOG.logger.info("\tQUEUE: message added to queue");
+		
 	}
 	int count=0;
 		
 	@Override
 	public void run() {
 		
-		while(true)
+		while(!Thread.currentThread().isInterrupted())
 		{
 			System.out.print("");
 			
@@ -35,21 +36,17 @@ public class SctpQueueProc implements Runnable {
 				if(queueproc.peek().msgtype.equals("RECEIVED"))
 				{
 					SctpMain.Processdata(queueproc.poll());
-					
+					SctpMain.LOG.logger.info("\tQUEUE: Processing Receive");
 					readytoprocess=true;				
 				}
 				else if(queueproc.peek().msgtype.equals("SENDING"))
 				{
 					
-					
 					queueproc.poll();
 					SctpMain.sm.msgtype="SENDING";
 					SctpVectorClock.send_msg_flag=true;		
 					count++;
-					//System.out.println("message ready for sending " +count );
-				//	System.out.println("Queue pending elements " +queueproc.size() );
-					
-											
+					SctpMain.LOG.logger.info("\tQUEUE: processing send");								
 					
 				}
 				else if(queueproc.peek().msgtype.equals("CheckPoint"))
@@ -57,16 +54,29 @@ public class SctpQueueProc implements Runnable {
 					queueproc.poll();
 					
 					SctpCheckpoint.take_Checkpoint();
+					SctpMain.LOG.logger.info("\tQUEUE: processing checkpoint");
 					readytoprocess=true;
 					
 				}
 				
+				else if(queueproc.peek().msgtype.equals("SENDING_TERMINATION"))
+				{
+					queueproc.poll();
+					SctpMain.terminate();
+					
+					SctpMain.c1.send_terminatation();
+					SctpMain.LOG.logger.info("\tQUEUE: processing send termination");
+					readytoprocess=true;
+					
+				}
+				
+								
 			}
 			}
 			
 		}
 		
-		
+		SctpMain.LOG.logger.info("\tQUEUE PROC: Exiting");
 	}
 
 }

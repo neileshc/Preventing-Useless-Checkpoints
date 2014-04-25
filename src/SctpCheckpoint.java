@@ -1,15 +1,19 @@
+import java.util.Random;
+
 
 public class SctpCheckpoint implements Runnable {
 
 	SctpMessage newmsg=new SctpMessage(SctpServer.mynodeno);
 	int count=0;
+	Random R =new Random();
 	
 	long find_ICT()
 	{
-		if(SctpServer.mynodeno==1)
-			return 15000;
-			else
-				return 3000;
+//		if(SctpServer.mynodeno==1)
+//			return 15000;
+//			else
+		return(R.nextInt(Configfilereader.ICT));
+			//	return 500;
 			
 			
 			
@@ -54,6 +58,7 @@ public class SctpCheckpoint implements Runnable {
 			newmsg.msgtype="CheckPoint";
 			SctpQueueProc.addQ(newmsg);
 			
+			SctpMain.LOG.logger.info("\tCHECKPOINT : new CP added to q");
 		
 			count++;
 			
@@ -71,7 +76,7 @@ public class SctpCheckpoint implements Runnable {
 		}while(count<Configfilereader.numberofcheckpoints); // change this to handle termination
 		
 		
-		//System.out.println("checkpoint thread exiting");
+		SctpMain.LOG.logger.info("\tCHECKPOINT : checkpoint thread exiting");
 		
 	}
 

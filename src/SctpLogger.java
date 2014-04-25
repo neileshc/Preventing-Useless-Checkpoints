@@ -20,7 +20,7 @@ public class SctpLogger {
 		    try {  
 
 		        // This block configure the logger with handler and formatter  
-		        fh = new FileHandler("/home/004/n/nx/nxc121930/AOS/Project2/"+ filename);  
+		        fh = new FileHandler("/home/004/n/nx/nxc121930/AOS/Project3/"+ filename);  
 		        logger.addHandler(fh);
 		        SimpleFormatter formatter = new SimpleFormatter();  
 		        fh.setFormatter(formatter);  
@@ -32,7 +32,7 @@ public class SctpLogger {
 		        e.printStackTrace();  
 		    }  
 	}
-		   // logger.info("Hi How r u?");  
+		  
 
 		}
 
