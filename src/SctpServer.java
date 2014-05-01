@@ -1,87 +1,91 @@
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.*;
+import java.util.ArrayList;
 
 import com.sun.nio.sctp.MessageInfo;
 import com.sun.nio.sctp.SctpChannel;
 import com.sun.nio.sctp.SctpServerChannel;
 
-public class SctpServer extends Thread{
-    static int SERVER_PORT;
-    int mynodeno;
-  //  HashMap<Integer,SctpChannel> ClientChannels= new HashMap<>(); 
-    
-   
-    public SctpServer(int nodeno) {
-    	SERVER_PORT = Integer.parseInt(Configfilereader.Machineport[(nodeno-1)]);
-    	mynodeno=nodeno;
-}
+public class SctpServer extends Thread {
+	static Integer SERVER_PORT;
+	public static int mynodeno;
+	public static final int MESSAGE_SIZE = 10000;
+	public int msgsent = 0;
+	public int[] servervectorclock = new int[Configfilereader.totalnodes];
+	public static ArrayList<SctpChannel> sc = new ArrayList<>();
+
+	// Initialize server details
+	public SctpServer(int nodeno) {
+		// Initializing Server Port details
+		SERVER_PORT = Configfilereader.Machineport[(nodeno - 1)];
+		mynodeno = nodeno;
+
+		for (int i = 0; i < Configfilereader.totalnodes; i++) {
+			servervectorclock[i] = 0;
+		}
+	}
 
 	public void run() {
-        SctpServerChannel ssc;
-		try {
-			
-			
-		ssc = SctpServerChannel.open();
-		
-		
-		
-        InetSocketAddress serverAddr = new InetSocketAddress(SERVER_PORT);
-        ssc.bind(serverAddr);
 
-        ByteBuffer buf = ByteBuffer.allocate(120);
-        
-        //SctpChannel sc = ssc.accept();
-        ArrayList<SctpChannel> sc=new ArrayList<>();
-        for(int j=0;j<Configfilereader.totalnodes;j++)
-		 {
-        	if(j==(mynodeno-1))
-        			continue;
-        	sc.add(ssc.accept());
-		 }
-        
-        for(int j=0;j<sc.size();j++)
-        	{
-        	SendMsg(buf,sc.get(j));
-        	}
-            
-      
-        
-        //sc.close();
+		try {
+			// Opening server Channel
+			SctpServerChannel ssc = SctpServerChannel.open();
+
+			// Create socket address
+			InetSocketAddress serverAddr = new InetSocketAddress(SERVER_PORT);
+
+			// Bind the channel's socket to the server
+			ssc.bind(serverAddr);
+			System.out
+					.println("Server : Setting up the distributed network .....");
+			System.out.println("Server : Server UP for node : " + mynodeno
+					+ " at Port number: " + SERVER_PORT);
+
+			// Server runs in loop for accepting connections from clients
+			// as soon as it gets connection it creates seperate thread for that
+			// one
+
+			SctpChannel sc_temp;
+			do {
+				// Returns a new SCTPChannel between the server and client
+
+				sc_temp = (ssc.accept());
+				sc.add(sc_temp);
+
+				SctpChannelprocessing thread = new SctpChannelprocessing(
+						sc_temp);
+				Thread obj = new Thread(thread);
+				obj.start();
+
+				System.out
+						.println("Server : connection accepted from another node");
+
+				// Break the loop once you have all the clients connected
+				if (sc.size() == (Configfilereader.totalnodes - 1))
+					break;
+
+			} while (true);
+
+			// Allow some time to server to accept connections
+			System.out
+					.println("Server : Node Setup Completed , Preparing network to send messages.....");
+
+			do {
+				// do thing
+
+			} while (!Thread.currentThread().isInterrupted());
+
+			System.out.println("Server : Exiting ");
+			// handle it better way to avoid server shutting down if you can
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-    }
-
-void SendMsg(ByteBuffer buf, SctpChannel sc)
-{
-	try {    
-		SctpMsg newmsg = new SctpMsg();
-		newmsg.msg = " message creatr is "+SERVER_PORT;
-		Object msg = newmsg;
-		buf= ByteBuffer.wrap(seriliazeUtil.Serialize(msg));
-		//buf.put(SctpMsg.serialize(newmsg));
-    	//buf.putInt(1).flip();
-		//buf.flip();
-        /* send the message on the US stream */
-        MessageInfo messageInfo = MessageInfo.createOutgoing(null,
-                                                             0);
-        sc.send(buf, messageInfo);
-        buf.clear();
-          
-          
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+		} // catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			// e.printStackTrace();
+		// }
 	}
-	
-}
+
 }

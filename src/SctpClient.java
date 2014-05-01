@@ -1,4 +1,3 @@
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
@@ -6,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.ArrayList;
+import java.util.Random;
 
 import com.sun.nio.sctp.AbstractNotificationHandler;
 import com.sun.nio.sctp.AssociationChangeNotification;
@@ -14,95 +14,163 @@ import com.sun.nio.sctp.MessageInfo;
 import com.sun.nio.sctp.SctpChannel;
 import com.sun.nio.sctp.ShutdownNotification;
 
-
 public class SctpClient extends Thread {
-    static int SERVER_PORT = 7454;
+	static Integer SERVER_PORT;
+	String machine = "";
+	public static int mynodeno = 0;
+	public static final int MESSAGE_SIZE = 10000;
+	public int msgcntr = 0;
+	SctpChannel[] sc = new SctpChannel[Configfilereader.totalnodes];
+	int temp = 0;
+	final Random rand = new Random();
 
-    static int mynodeno=0;
-    
-    SctpClient(int nodeid){
-    	mynodeno=nodeid;
-    	
-    }
-    
-    
+	SctpClient(int nodeno) {
+		mynodeno = nodeno;
 
+	}
 
-public void run() {
-		String machine="";
-		if(mynodeno==1)
-		machine="net01.utdallas.edu";
-		else if(mynodeno==2) 
-		//	machine="localhost";
-		machine="net02.utdallas.edu";
-		else
-		machine="net03.utdallas.edu";	
-		//machine="localhost";
-			
-        
-        ByteBuffer buf = ByteBuffer.allocate(120);
-        ArrayList<SctpChannel> sc=new ArrayList<>();
-        //SctpChannel sc;
+	public void run() {
+
+		SctpChannel temp_sc = null;
 		try {
-			
-			 for(int j=0;j<Configfilereader.totalnodes;j++)
-			 {
-	        	if(j==(mynodeno-1))
-	        			continue;
-	        	
-			InetSocketAddress serverAddr = new InetSocketAddress(machine, 
-					Integer.parseInt(Configfilereader.Machineport[j]));
-			
-			SctpChannel temp_sc = SctpChannel.open(serverAddr, 0, 0);
-			temp_sc.connect(serverAddr, 0, 0);
-			sc.add(temp_sc);
-			
+			// Loop for making desired connections
+			for (int j = 0; j < Configfilereader.totalnodes; j++) {
+				if (j == (mynodeno - 1)) {
+					sc[j] = null;
+					continue;
 				}
-			do{
-				for(int i=0; i<sc.size();i++)
-				{
-					sc.get(i).configureBlocking(false);
-						receiveMsg(sc.get(i), buf);
+				// Allocating the Server port for connection
+				SERVER_PORT = Configfilereader.Machineport[j];
+				machine = Configfilereader.Machinename[j];
+
+				// Create a socket address for server
+				InetSocketAddress serverAddr = new InetSocketAddress(machine,
+						SERVER_PORT);
+
+				// Open a channel.
+				temp_sc = SctpChannel.open(serverAddr, 0, 0);
+				if (temp_sc == null) {
+					j = j - 1;
+					continue;
 				}
-			}while(true);
-			
-           // sc.close();
-            
-        
+				// Save this servers connection in list
+				sc[j] = temp_sc;
+
+				System.out.println("Client : Client connected to Machine: "
+						+ machine + " at Port number: " + SERVER_PORT);
+			}
+
+			SctpMessage newmsg = null;
+
+			// Inducing sleep as when connection established we may see corrupt
+			// stream error
+			this.sleep(3000);
+
+			// ------------------------------------------------------------------------------------------------------
+
+			int count = 0;
+			do {
+				synchronized (this) {
+
+					if (SctpVectorClock.send_msg_flag) {
+						do {
+							temp = rand.nextInt(100);
+							temp = (temp % sc.length);
+						} while (sc[temp] == null);
+
+						SctpVectorClock.increment_Log_clk();
+
+						SctpMain.sm.setClock(SctpVectorClock.log_clk);
+
+						SctpZDStruct.setSent_to_index(true, temp);
+						SctpZDStruct.setMin_to_index(
+								SctpVectorClock.getLog_clk(), temp);
+
+						SctpMain.sm.setCKPT(SctpZDStruct.getCKPT());
+						SctpMain.sm.setClockArr(SctpZDStruct.getClockArr());
+						SctpMain.sm.setTaken(SctpZDStruct.getTaken());
+
+						// send message randomely to any node
+						if (sc[temp] != null)
+							SendMsg(sc[temp]);
+						count++;
+
+						System.out.println("Clock value after send :\t"
+								+ SctpVectorClock.log_clk);
+						System.out.println("Message sent :" + count);
+						SctpVectorClock.send_msg_flag = false;
+						SctpQueueProc.readytoprocess = true;
+					}
+				}
+
+			} while (!Thread.currentThread().isInterrupted());
+
+			System.out.println("Client : Exiting ");
+		}
+
+		catch (IOException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public boolean send_terminatation() {
+		SctpMain.sm.isterminationmsg = true;
+
+		// Broadcast message to every node in network
+		for (int j = 0; j < sc.length; j++) {
+
+			if (sc[j] != null)
+				SendMsg(sc[j]);
+		}
+
+		SctpMain.LOG.logger.info("\tClient Termination sent count : "+(sc.length-1));
+		
+		return true;
+	}
+
+	public synchronized void SendMsg(SctpChannel sc) {
+		// Buffer to hold messages in byte format
+		ByteBuffer buf = ByteBuffer.allocate(MESSAGE_SIZE);
+		try {
+
+			SctpMain.sm.setContent("\n Hello from Machine : "
+					+ Configfilereader.Machinename[(mynodeno - 1)] + "(Port : "
+					+ SERVER_PORT);
+
+			// Before sending messages add additional information about the
+			// message
+			MessageInfo messageInfo = MessageInfo.createOutgoing(null, 0);
+
+			buf.clear();
+
+			// convert the string message into bytes and put it in the byte
+			// buffer
+			buf.put(SctpMessage.serialize(SctpMain.sm));
+
+			// Reset a pointer to point to the start of buffer
+			buf.flip();
+
+			// Send a message in the channel (byte format)
+			sc.send(buf, messageInfo);
+
+			// System.out.println("Server" + newmsg.getContent());
+
+			buf.clear();
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    }
 
-void receiveMsg(SctpChannel sc, ByteBuffer buf) 
-{  
-	 try {
-		 
-	MessageInfo messageInfo = null;
-do {
-	messageInfo = sc.receive(buf, System.out,null);
-	
-    buf.flip();
-  
-    //SctpMsg m1= new SctpMsg();
-    SctpMsg m1 = (SctpMsg) seriliazeUtil.Deserialize(buf);
-    
-    //m1=(SctpMsg) SctpMsg.deserialize(buf.array());
+	}
 
-    System.out.println("message received from"+m1.msg);
-    buf.clear();
-   
-} while (messageInfo != null);
+	public String byteToString(ByteBuffer byteBuffer) {
+		byteBuffer.position(0);
+		byteBuffer.limit(MESSAGE_SIZE);
+		byte[] bufArr = new byte[byteBuffer.remaining()];
+		byteBuffer.get(bufArr);
+		return new String(bufArr);
+	}
 
-	 } 
-	 catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-
-}
-  
-    
 }
